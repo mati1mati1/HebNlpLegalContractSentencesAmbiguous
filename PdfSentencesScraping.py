@@ -2,7 +2,17 @@ import os
 import sqlite3
 from pdfminer.high_level import extract_text
 from hebrew_tokenizer import tokenize
+import stanza
 
+# Download the Hebrew model if you haven't already
+stanza.download('he')
+
+# Load the Hebrew pipeline
+nlp = stanza.Pipeline('he')
+
+def stanza_tokenize_sentences(text):
+    doc = nlp(text)
+    return [sentence.text for sentence in doc.sentences]
 def reverse_hebrew_text(text):
     return text[::-1]
 
@@ -24,7 +34,7 @@ def tokenize_hebrew_sentences(text):
             sentences.append(current_sentence.strip())
     return sentences
 
-conn = sqlite3.connect('HebrowContractSentences.db')
+conn = sqlite3.connect('HebrewContractSentences.db')
 cursor = conn.cursor()
 
 cursor.execute('''
@@ -50,7 +60,7 @@ def process_pdfs(directory_path):
                     # Reverse the text for correct Hebrew order
                     text = reverse_hebrew_text(text)
                     # Split text into sentences
-                    sentences = tokenize_hebrew_sentences(text)
+                    sentences = stanza_tokenize_sentences(text)
                     # Save sentences to the database
                     save_sentences_to_db(sentences, filename)
                 else:
